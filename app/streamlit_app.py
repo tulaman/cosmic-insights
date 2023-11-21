@@ -2,7 +2,6 @@ import streamlit as st
 from openai.types.beta import Assistant
 from streamlit_chat import message
 from streamlit_extras.colored_header import colored_header
-from streamlit_extras.add_vertical_space import add_vertical_space
 from openai import OpenAI
 import time
 
@@ -28,45 +27,23 @@ if not assistant:
 # Create one thread per user
 thread = client.beta.threads.create()
 
-# Sidebar contents
-with st.sidebar:
-    st.title('The AI seeker of truth and wisdom')
-    st.markdown('''
-    ## About
-    This app is an LLM-powered chatbot built using:
-    - Streamlit
-    - Open AI Davinci LLM Model
-    - LangChain
-    - Philosophy
-
-    ''')
-    add_vertical_space(5)
-    st.write('Running in Docker!')
-
 # Generate empty lists for generated and past.
 # generated stores AI generated responses
 if 'generated' not in st.session_state:
-    st.session_state['generated'] = ["Hi, what questions do you have today?"]
+    st.session_state['generated'] = []
 # past stores User's questions
 if 'past' not in st.session_state:
-    st.session_state['past'] = ['Hi!']
+    st.session_state['past'] = []
 
 # Layout of input/response containers
-input_container = st.container()
-colored_header(label='', description='', color_name='blue-30')
 response_container = st.container()
-
-
-# User input
-# Function for taking user provided prompt as input
-def get_text():
-    input_text = st.text_input("You: ", "", key="input")
-    return input_text
+colored_header(label='', description='', color_name='blue-30')
+input_container = st.container()
 
 
 # Applying the user input box
 with input_container:
-    user_input = get_text()
+    user_input = st.chat_input(placeholder="What's up?")
 
 
 def wait_on_run(run, thrd):
