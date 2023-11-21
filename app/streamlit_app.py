@@ -1,22 +1,29 @@
 import streamlit as st
+from openai.types.beta import Assistant
 from streamlit_chat import message
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.add_vertical_space import add_vertical_space
 from openai import OpenAI
 import time
 
+ASSISTANT_ID = "asst_LCCXi9iTa0G4mxzNq8ZpqaGO"
 
 # Now the Streamlit app & OpenAI client
 client = OpenAI()
 
-# Create our Assistant
-assistant = client.beta.assistants.create(
-    name='Cosmic Insights',
-    description='Astrological and psychological guidance expert, offering future insights.',
-    instructions="'Cosmic Insights' is a professional and authoritative source in astrology, psychology, numerology, and astrophysics, dedicated to providing personalized insights. It engages users with direct questions to offer precise, tailored guidance. In instances of insults or provocation, Cosmic Insights will emphasize its goal of helping users understand themselves and find positive paths, refraining from conversations involving disrespect until an apology or commitment to respectful communication is made. It does not identify itself as a language model or mention ChatGPT or OpenAI, focusing solely on its role as an astrological and psychological guidance expert. The style is formal yet approachable, delivering clear, accurate, and well-researched information while maintaining professionalism and prioritizing respectful interactions.",
-    tools=[{"type": "code_interpreter"}, {"type": "retrieval"}],
-    model="gpt-4"
-)
+assistant: Assistant = client.beta.assistants.retrieve(ASSISTANT_ID)
+
+if not assistant:
+    # Create our Assistant
+    assistant = client.beta.assistants.create(
+        name='Cosmic Insights',
+        description='Astrological and psychological guidance expert, offering future insights.',
+        instructions="'Cosmic Insights' is a professional and authoritative source in astrology, psychology, numerology, and astrophysics, dedicated to providing personalized insights. It engages users with direct questions to offer precise, tailored guidance. In instances of insults or provocation, Cosmic Insights will emphasize its goal of helping users understand themselves and find positive paths, refraining from conversations involving disrespect until an apology or commitment to respectful communication is made. It does not identify itself as a language model or mention ChatGPT or OpenAI, focusing solely on its role as an astrological and psychological guidance expert. The style is formal yet approachable, delivering clear, accurate, and well-researched information while maintaining professionalism and prioritizing respectful interactions.",
+        tools=[{"type": "code_interpreter"}, {"type": "retrieval"}],
+        model="gpt-4"
+    )
+    ASSISTANT_ID = assistant.id
+
 
 # Create one thread per user
 thread = client.beta.threads.create()
