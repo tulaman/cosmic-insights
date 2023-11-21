@@ -1,0 +1,8 @@
+streamlit~=1.27.2
+streamlit-chat
+streamlit-extras
+openai
+langchain
+aiohttp
+yarl
+frozenlist
