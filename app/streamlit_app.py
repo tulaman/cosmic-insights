@@ -5,7 +5,7 @@ from streamlit_extras.colored_header import colored_header
 from openai import OpenAI
 import time
 
-ASSISTANT_ID = "asst_LCCXi9iTa0G4mxzNq8ZpqaGO"
+ASSISTANT_ID = "asst_hpxFoHhGbLGRKLsuBs4CREvY"
 
 # Now the Streamlit app & OpenAI client
 client = OpenAI()
