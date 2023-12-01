@@ -6,3 +6,4 @@ langchain
 aiohttp
 yarl
 frozenlist
+pytest

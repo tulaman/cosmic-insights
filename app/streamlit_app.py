@@ -1,9 +1,12 @@
+from math import e
 import streamlit as st
 from openai.types.beta import Assistant
 from streamlit_chat import message
 from streamlit_extras.colored_header import colored_header
 from openai import OpenAI
 import time
+import json
+from utils import get_horoscope
 
 ASSISTANT_ID = "asst_hpxFoHhGbLGRKLsuBs4CREvY"
 
@@ -37,7 +40,7 @@ if 'past' not in st.session_state:
 
 # Layout of input/response containers
 response_container = st.container()
-colored_header(label='', description='', color_name='blue-30')
+colored_header(label='', description='', color_name='blue-70')
 input_container = st.container()
 
 
@@ -48,11 +51,50 @@ with input_container:
 
 def wait_on_run(run, thrd):
     while run.status == "queued" or run.status == "in_progress":
+        time.sleep(0.5)
         run = client.beta.threads.runs.retrieve(
             thread_id=thrd.id,
             run_id=run.id,
         )
-        time.sleep(0.5)
+    
+    if run.status == 'requires_action':
+        required_action = run.required_action
+        if required_action.type == 'submit_tool_outputs':
+            for f in required_action.submit_tool_outputs.tool_calls:
+                if f.type == 'function' and f.function.name == 'get_horoscope':
+                    # st.warning(f'Found get_horoscope function')
+                    call_id = f.id
+
+                    args = json.loads(f.function.arguments)
+                    day = args['day'].lower()
+                    sunsign = args['sunsign'].lower()
+
+                    # st.warning(f'Calling get_horoscope function for {day} and {sunsign}')
+                    horoscope = {}
+                    try:
+                        horoscope = get_horoscope(day, sunsign)
+                    except Exception as e:
+                        st.warning("Some error happend")
+
+                    # there should be status in function return like success: true
+                    horoscope["success"] = "true"
+
+                    # submit horoscope to the thread
+                    # st.warning(f'Submitting horoscope to the thread ({horoscope})')
+                    # TODO: modify submitting tool outputs to work with multiple functions
+                    run = client.beta.threads.runs.submit_tool_outputs(
+                        thread_id = run.thread_id,
+                        run_id = run.id,
+                        tool_outputs = [
+                            {
+                                "tool_call_id": call_id,
+                                "output": json.dumps(horoscope)
+                            },
+                        ]
+                    )
+                    break    
+        wait_on_run(run, thrd)
+
     return run
 
 
@@ -79,7 +121,7 @@ def generate_response(prompt):
         thread_id=thread.id
     )
 
-    res = messages.data[0].content[0].text.value
+    res = messages.data[0].content[0].text.value # type: ignore
     return res
 
 
