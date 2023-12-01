@@ -59,8 +59,8 @@ def wait_on_run(run, thrd):
     
     if run.status == 'requires_action':
         required_action = run.required_action
-        if required_action.type == 'submit_tool_outputs':
-            for f in required_action.submit_tool_outputs.tool_calls:
+        if required_action.type == 'submit_tool_outputs': # type: ignore
+            for f in required_action.submit_tool_outputs.tool_calls: # type: ignore
                 if f.type == 'function' and f.function.name == 'get_horoscope':
                     # st.warning(f'Found get_horoscope function')
                     call_id = f.id
