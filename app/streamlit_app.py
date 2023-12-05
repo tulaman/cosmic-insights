@@ -6,7 +6,7 @@ from streamlit_extras.colored_header import colored_header
 from openai import OpenAI
 import time
 import json
-from utils import get_horoscope
+from utils import get_horoscope, get_tarot_card
 
 ASSISTANT_ID = "asst_hpxFoHhGbLGRKLsuBs4CREvY"
 
@@ -60,12 +60,14 @@ def wait_on_run(run, thrd):
     if run.status == 'requires_action':
         required_action = run.required_action
         if required_action.type == 'submit_tool_outputs': # type: ignore
+            tool_outputs = []
+
             for f in required_action.submit_tool_outputs.tool_calls: # type: ignore
+                call_id = f.id
+                args = json.loads(f.function.arguments)
+                
                 if f.type == 'function' and f.function.name == 'get_horoscope':
                     # st.warning(f'Found get_horoscope function')
-                    call_id = f.id
-
-                    args = json.loads(f.function.arguments)
                     day = args['day'].lower()
                     sunsign = args['sunsign'].lower()
 
@@ -73,27 +75,39 @@ def wait_on_run(run, thrd):
                     horoscope = {}
                     try:
                         horoscope = get_horoscope(day, sunsign)
+                        horoscope["success"] = "true"
                     except Exception as e:
                         st.warning("Some error happend")
-
-                    # there should be status in function return like success: true
-                    horoscope["success"] = "true"
+                        horoscope["success"] = "false"
 
                     # submit horoscope to the thread
                     # st.warning(f'Submitting horoscope to the thread ({horoscope})')
-                    # TODO: modify submitting tool outputs to work with multiple functions
-                    run = client.beta.threads.runs.submit_tool_outputs(
-                        thread_id = run.thread_id,
-                        run_id = run.id,
-                        tool_outputs = [
-                            {
-                                "tool_call_id": call_id,
-                                "output": json.dumps(horoscope)
-                            },
-                        ]
-                    )
-                    break    
-        wait_on_run(run, thrd)
+                    tool_outputs.append({
+                        "tool_call_id": call_id,
+                        "output": json.dumps(horoscope)
+                    })
+
+                if f.type == 'function' and f.function.name == 'get_random_tarot_card':
+                    card = {}
+                    try:
+                        card = get_tarot_card()
+                        card["success"] = "true"
+                    except Exception as e:
+                        st.warning("Error with horoscope api")
+                        card["success"] = "false"
+                    
+                    tool_outputs.append({
+                        "tool_call_id": call_id,
+                        "output": json.dumps(card)
+                    })                   
+
+
+            run = client.beta.threads.runs.submit_tool_outputs(
+                thread_id = run.thread_id,
+                run_id = run.id,
+                tool_outputs = tool_outputs
+            )
+            wait_on_run(run, thrd)
 
     return run
 
