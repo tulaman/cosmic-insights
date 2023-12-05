@@ -54,3 +54,27 @@ def get_tarot_card() -> dict:
 
     res_dict = json.loads(data)
     return res_dict
+
+def get_three_tarot_cards() -> dict:
+    conn = http.client.HTTPSConnection(constants.RAPID_API_HOST)
+    
+    headers = {
+        'X-RapidAPI-Key': constants.RAPID_API_KEY,
+        'X-RapidAPI-Host': constants.RAPID_API_HOST
+    }
+    
+    url = "/threetarotcards"
+    params = {}    
+    params_encoded = urllib.parse.urlencode(params)
+    url = url + "?" + params_encoded
+    
+    conn.request("GET", url, headers=headers)
+    res = conn.getresponse()
+    logging.warning(res)
+    data = res.read()
+    logging.warning(data)
+
+    conn.close()
+
+    res_dict = json.loads(data)
+    return res_dict

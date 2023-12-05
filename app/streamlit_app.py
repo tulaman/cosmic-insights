@@ -6,7 +6,7 @@ from streamlit_extras.colored_header import colored_header
 from openai import OpenAI
 import time
 import json
-from utils import get_horoscope, get_tarot_card
+from utils import get_horoscope, get_tarot_card, get_three_tarot_cards
 
 ASSISTANT_ID = "asst_hpxFoHhGbLGRKLsuBs4CREvY"
 
@@ -99,7 +99,21 @@ def wait_on_run(run, thrd):
                     tool_outputs.append({
                         "tool_call_id": call_id,
                         "output": json.dumps(card)
-                    })                   
+                    }) 
+
+                if f.type == 'function' and f.function.name == 'get_three_tarot_cards':
+                    cards = {}
+                    try:
+                        cards["result"] = get_three_tarot_cards()
+                        cards["success"] = "true"
+                    except Exception as e:
+                        st.warning("Error with horoscope api")
+                        cards["success"] = "false"
+                    
+                    tool_outputs.append({
+                        "tool_call_id": call_id,
+                        "output": json.dumps(cards)
+                    })                     
 
 
             run = client.beta.threads.runs.submit_tool_outputs(
